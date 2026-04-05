@@ -1,0 +1,9 @@
+aiogram>=3.0
+sqlalchemy
+alembic
+asyncpg
+pydantic-settings
+openai
+apscheduler
+redis
+python-dotenv
