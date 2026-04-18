@@ -1,8 +1,8 @@
-"""initial
+"""added type and date fields to task table
 
-Revision ID: 055139665ec1
+Revision ID: 079e538b507f
 Revises: 
-Create Date: 2026-04-05 18:07:59.865113
+Create Date: 2026-04-12 17:52:00.202803
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '055139665ec1'
+revision: str = '079e538b507f'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -34,7 +34,9 @@ def upgrade() -> None:
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('interval_seconds', sa.Integer(), nullable=False),
     sa.Column('last_reminded_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('type', sa.Enum('normal', 'interval', name='tasktype'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

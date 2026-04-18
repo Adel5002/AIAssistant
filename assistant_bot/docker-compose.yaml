@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_VHOST=/
+    ports:
+      - "5672:5672"   
+      - "15672:15672" 
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build: .
+    command: python main.py
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - ./database.db:/app/database.db
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////app/database.db
+
+  worker:
+    build: .
+    command: taskiq worker services.cron_tasks:broker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - ./database.db:/app/database.db
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - PYTHONPATH=/app
+      - DATABASE_URL=sqlite+aiosqlite:////app/database.db
+
+  scheduler:
+    build: .
+    command: taskiq scheduler services.cron_tasks:scheduler
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy

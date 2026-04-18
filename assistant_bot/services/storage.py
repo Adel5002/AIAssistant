@@ -29,7 +29,7 @@ class StorageService:
         self.session.add(new_task)
         await self.session.commit()
         await self.session.refresh(new_task)
-
+        
         return TaskRead.model_validate(new_task)
 
     async def get_user_tasks(self, user_id: int, only_active: bool = True) -> list[TaskRead]:
@@ -40,6 +40,12 @@ class StorageService:
         result = await self.session.execute(query)
         tasks = result.scalars().all()
         return [TaskRead.model_validate(t) for t in tasks]
+
+    async def get_task(self, task_id: int) -> TaskRead | None:
+        query = select(Task).where(Task.id == task_id)
+        result = await self.session.execute(query)
+        task = result.scalar_one_or_none()
+        return TaskRead.model_validate(task) if task else None    
 
     async def deactivate_task(self, task_id: int, user_id: int):
         query = (
